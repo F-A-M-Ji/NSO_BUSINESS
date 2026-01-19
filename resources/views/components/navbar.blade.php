@@ -9,7 +9,7 @@ $user = auth()->user();
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
             <div class="flex items-center gap-3 cursor-pointer group" onclick="window.location.href='/'">
-                <img src="{{ asset('images/NSOlogo.jpg') }}"
+                <img src="{{ asset('images/NSOlogo.png') }}"
                     alt="Logo"
                     class="h-10 w-auto md:h-12 lg:h-14 object-contain bg-white rounded-lg transition-transform duration-300 group-hover:scale-105">
                 <div class="flex flex-col">
@@ -60,6 +60,17 @@ $user = auth()->user();
                 </a>
                 @endif
 
+                @if($user->role === UserRole::SUBJECT)
+                <a href="{{ url('/') }}"
+                    class="px-3 py-2 rounded-lg text-sm font-semibold transition-colors {{ $active == 'home' ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:text-indigo-900' }}">
+                    หน้าหลัก
+                </a>
+                <a href="{{ route('subject.reports') }}"
+                    class="px-3 py-2 rounded-lg text-sm font-semibold transition-colors {{ ($active == 'subject.reports' || request()->routeIs('subject.reports')) ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:text-indigo-900' }}">
+                    ข้อมูลที่อนุมัติแล้ว
+                </a>
+                @endif
+
                 @endauth
 
                 {{-- ส่วนปุ่ม Profile / Login --}}
@@ -79,9 +90,6 @@ $user = auth()->user();
                 @else
                 <div class="relative ml-4">
                     <button onclick="toggleUserDropdown()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold transition-all text-sm border border-indigo-100">
-                        <!-- <div class="w-6 h-6 rounded-full bg-indigo-200 flex items-center justify-center text-indigo-700 text-xs">
-                            {{ substr(Auth::user()->firstname, 0, 1) }}
-                        </div> -->
                         {{ Auth::user()->firstname }} {{ Auth::user()->lastname }}
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="m6 9 6 6 6-6" />
@@ -135,6 +143,26 @@ $user = auth()->user();
             <a href="{{ url('/') }}" class="block w-full text-left px-4 py-3 rounded-lg font-semibold text-sm {{ $active == 'home' ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:bg-slate-50' }}">หน้าหลัก</a>
             <a href="{{ route('dashboard') }}" class="block w-full text-left px-4 py-3 rounded-lg font-semibold text-sm {{ ($active == 'dashboard' || request()->routeIs('dashboard')) ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:bg-slate-50' }}">การติดตามงาน</a>
             @endif
+
+            @if($user->role === UserRole::SUBJECT)
+            <a href="{{ url('/') }}" class="block w-full text-left px-4 py-3 rounded-lg font-semibold text-sm {{ $active == 'home' ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:bg-slate-50' }}">หน้าหลัก</a>
+            <a href="{{ route('subject.reports') }}" class="block w-full text-left px-4 py-3 rounded-lg font-semibold text-sm {{ ($active == 'subject.reports' || request()->routeIs('subject.reports')) ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:bg-slate-50' }}">ข้อมูลที่อนุมัติแล้ว</a>
+            @endif
+
+            <div class="pt-4 mt-4 border-t border-slate-100">
+                <div class="flex items-center gap-3 px-4 mb-3">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-800">{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}</span>
+                        <span class="text-xs text-slate-500">{{ Auth::user()->role->label() ?? Auth::user()->role->value }}</span>
+                    </div>
+                </div>
+
+                <a href="{{ route('logout') }}"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                    class="block w-full text-left px-4 py-3 rounded-lg font-semibold text-sm text-red-600 hover:bg-red-50 transition-colors">
+                    ออกจากระบบ
+                </a>
+            </div>
             @endauth
 
             @guest

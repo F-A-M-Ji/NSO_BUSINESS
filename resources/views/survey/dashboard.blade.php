@@ -244,13 +244,17 @@ use App\Enums\UserRole;
                                     </span>
 
                                     @if(!empty($item->messages))
-                                    <div class="mt-1 px-3 py-2 bg-red-50 border border-red-100 rounded-2xl w-full max-w-[18rem]">
+                                    <div id="error-msg-{{ $item->ID }}" class="mt-1 px-3 py-2 bg-red-50 border border-red-100 rounded-lg w-full max-w-[16rem]">
                                         <div class="flex items-start gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                <circle cx="12" cy="12" r="10" />
-                                                <path d="M12 8v4" />
-                                                <path d="M12 16h.01" />
-                                            </svg>
+                                            {{-- ไอคอน --}}
+                                            <div id="error-icon-{{ $item->ID }}"> {{-- เพิ่ม ID ให้ส่วนไอคอนด้วย --}}
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="12" cy="12" r="10" />
+                                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                                </svg>
+                                            </div>
+
                                             <p class="text-xs text-red-700 font-bold leading-relaxed break-words min-w-0">
                                                 {{ $item->messages }}
                                             </p>
@@ -409,6 +413,16 @@ use App\Enums\UserRole;
                         const inspectorCell = row.querySelector('.inspector-cell');
                         if (inspectorCell && data.inspector_name) {
                             inspectorCell.innerHTML = `<span class="font-bold text-slate-800">${data.inspector_name}</span>`;
+                        }
+
+                        const errorIcon = row.querySelector('.bg-red-50.text-red-600.animate-pulse'); // คลาสเฉพาะของไอคอนตกใจ
+                        if (errorIcon) {
+                            errorIcon.remove();
+                        }
+
+                        const errorBox = document.getElementById('error-msg-' + id);
+                        if (errorBox) {
+                            errorBox.remove(); // ลบกล่องข้อความทิ้งทันที
                         }
                     }
 

@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SubjectController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,6 +19,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/users/store', [UserController::class, 'store'])->name('users.store');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/subject/reports', [SubjectController::class, 'index'])->name('subject.reports');
+
+    Route::post('/subject/report-wrong', [SubjectController::class, 'reportWrong'])->name('subject.reportWrong');
 });
 
 Route::controller(SurveyController::class)->group(function () {

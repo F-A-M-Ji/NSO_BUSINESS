@@ -612,7 +612,9 @@ class SurveyController extends Controller
             ['ID' => $id],
             [
                 'isApprove' => '1',
-                'approve_time' => $now
+                'approve_time' => $now,
+                'isWrong'   => 0,
+                'messages'  => null,
             ]
         );
 
