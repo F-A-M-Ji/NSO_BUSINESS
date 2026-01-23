@@ -6,11 +6,22 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Enums\UserRole;
 use Illuminate\Validation\Rule; // อย่าลืม use Rule
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
+    private function ensureAdmin(): void
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== UserRole::ADMIN) {
+            abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
+    }
+
     public function create()
     {
+        $this->ensureAdmin();
+
         // return view('users.create', [
         //     'roles' => UserRole::cases(),
         //     'provinces' => config('provinces')
@@ -29,6 +40,8 @@ class UserController extends Controller
     // ✅ ฟังก์ชันบันทึกข้อมูล
     public function store(Request $request)
     {
+        $this->ensureAdmin();
+
         // 1. ตรวจสอบข้อมูล (Validation)
         $validated = $request->validate([
             'username' => ['required', 'string', 'max:7', 'unique:users,username'], // ห้ามซ้ำ

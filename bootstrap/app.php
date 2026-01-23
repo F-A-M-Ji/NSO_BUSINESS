@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // ถ้ายังไม่ Login ให้ดีดไปหน้าแรก (/)
         $middleware->redirectGuestsTo('/');
+        $middleware->appendToGroup('web', \App\Http\Middleware\RequestAuditLogger::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

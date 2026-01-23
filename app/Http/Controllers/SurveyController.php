@@ -24,6 +24,30 @@ class SurveyController extends Controller
         return Control::where('ID', $id)->firstOrFail();
     }
 
+    private function getAuthorizedSurveyData($id)
+    {
+        $data = $this->getSurveyData($id);
+        $this->checkAuthorization($data);
+        return $data;
+    }
+
+    private function ensureSurveyAccess($id): void
+    {
+        $this->getAuthorizedSurveyData($id);
+    }
+
+    private function validatedSurveyId(Request $request): string
+    {
+        $validated = $request->validate([
+            'id' => ['required', 'digits:15', 'exists:controls,ID'],
+        ]);
+
+        $id = $validated['id'];
+        $this->ensureSurveyAccess($id);
+
+        return $id;
+    }
+
     private function checkAuthorization($data)
     {
         if (Auth::check()) {
@@ -197,8 +221,7 @@ class SurveyController extends Controller
     private function prepareDataForView($id)
     {
         // 1. ดึงข้อมูลพื้นฐาน (จาก Reports หรือ Controls)
-        $control = $this->getSurveyData($id);
-        $this->checkAuthorization($control);
+        $control = $this->getAuthorizedSurveyData($id);
 
         // 2. ดึงข้อมูลจาก Session (ถ้ามี) มาทับ
         // เพื่อให้ User เห็นค่าล่าสุดที่เพิ่งกรอกไป (แม้จะยังไม่ได้บันทึกลง DB)
@@ -222,7 +245,7 @@ class SurveyController extends Controller
 
     public function storePart0(Request $request)
     {
-        $id = $request->input('id');
+        $id = $this->validatedSurveyId($request);
         $data = [
             'REG' => $request->input('reg'),
             'CWT' => $request->input('cwt'),
@@ -290,7 +313,7 @@ class SurveyController extends Controller
 
     public function storePart1(Request $request)
     {
-        $id = $request->input('id');
+        $id = $this->validatedSurveyId($request);
         $data = $request->only([
             'A01',
             'A02',
@@ -344,14 +367,14 @@ class SurveyController extends Controller
     // 2. แสดงหน้า Part 2
     public function part2($id)
     {
-        $control = Control::where('ID', $id)->firstOrFail();
+        $control = $this->prepareDataForView($id);
         return view('survey.form_part2', compact('control'));
     }
 
     // 3. รับค่าจาก Part 2 -> ไป Part 3 (หรือหน้าถัดไป)
     public function storePart2(Request $request)
     {
-        $id = $request->input('id');
+        $id = $this->validatedSurveyId($request);
         $data = $request->only([
             'B01',
             'B02',
@@ -397,7 +420,7 @@ class SurveyController extends Controller
     // 3. รับค่าจาก Part 3 -> ไปหน้าถัดไป (หรือหน้าจบ)
     public function storePart3(Request $request)
     {
-        $id = $request->input('id');
+        $id = $this->validatedSurveyId($request);
         $data = $request->only([
             'C01',
             'C02',
@@ -441,7 +464,7 @@ class SurveyController extends Controller
     // 3. บันทึกข้อมูล Part 4 (และจบการทำงาน หรือไปหน้าถัดไป)
     public function storePart4(Request $request)
     {
-        $id = $request->input('id');
+        $id = $this->validatedSurveyId($request);
         $data = $request->only([
             'D01',
             'D02',
@@ -464,7 +487,7 @@ class SurveyController extends Controller
     // 3. บันทึกข้อมูล Part 5 -> ส่งไป Part 6
     public function storePart5(Request $request)
     {
-        $id = $request->input('id');
+        $id = $this->validatedSurveyId($request);
         $data = $request->only([
             'E01',
             'E02',
@@ -498,7 +521,7 @@ class SurveyController extends Controller
     // 3. บันทึกข้อมูล Part 6 -> ส่งไป Part 7 (ตอนจบ)
     public function storePart6(Request $request)
     {
-        $id = $request->input('id');
+        $id = $this->validatedSurveyId($request);
         $data = $request->only([
             'F01',
             'F02',
@@ -536,7 +559,7 @@ class SurveyController extends Controller
     // 3. บันทึกข้อมูล Part 7 และ **จบการทำงาน**
     public function storePart7(Request $request)
     {
-        $id = $request->input('id');
+        $id = $this->validatedSurveyId($request);
         $data = $request->only([
             'G01',
             'G02',
@@ -570,12 +593,16 @@ class SurveyController extends Controller
             'Remarks_07',
         ]);
 
-        $staffData = [
-            'H01' => $request->input('staff_collector'), // ผู้เก็บรวบรวม
-            'H02' => $request->input('staff_editor'),    // บรรณาธิกร
-            'H03' => $request->input('staff_recorder'),  // ผู้บันทึก
-            'H04' => $request->input('staff_inspector'), // ผู้ตรวจ
-        ];
+        $staffData = [];
+        $user = Auth::user();
+        if ($user && in_array($user->role, [UserRole::INTERVIEWER, UserRole::SUPERVISOR, UserRole::ADMIN], true)) {
+            $staffData = [
+                'H01' => $request->input('staff_collector'), // ผู้เก็บรวบรวม
+                'H02' => $request->input('staff_editor'),    // บรรณาธิกร
+                'H03' => $request->input('staff_recorder'),  // ผู้บันทึก
+                'H04' => $request->input('staff_inspector'), // ผู้ตรวจ
+            ];
+        }
 
         $finalData = array_merge($data, $staffData);
 
@@ -598,8 +625,17 @@ class SurveyController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role->value !== UserRole::SUPERVISOR->value) {
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        if ($user->role !== UserRole::SUPERVISOR) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $this->ensureSurveyAccess($id);
+        if (!Report::where('ID', $id)->exists()) {
+            return response()->json(['success' => false, 'message' => 'Report not found'], 404);
         }
 
         $now = now();

@@ -217,7 +217,8 @@ use App\Enums\UserRole;
                             id="row-{{ $item->ID }}"
                             x-data="{
                                     approved: {{ $item->isApprove == '1' ? 'true' : 'false' }},
-                                    canApprove: {{ $item->isSend == '1' ? 'true' : 'false' }}
+                                    canApprove: {{ $item->isSend == '1' ? 'true' : 'false' }},
+                                    hasWarning: {{ ( ($item->isWrong ?? '0') == '1' || !empty($item->messages) ) ? 'true' : 'false' }}
                                 }">
 
                             {{-- Col 1 --}}
@@ -314,7 +315,7 @@ use App\Enums\UserRole;
                                     </a>
 
                                     @if(auth()->user()->role->value === App\Enums\UserRole::SUPERVISOR->value)
-                                    <template x-if="canApprove && !approved">
+                                    <!-- <template x-if="canApprove && !approved">
                                         <button @click="approveSurvey('{{ $item->ID }}', () => approved = true, $el)"
                                             class="inline-flex items-center justify-center w-10 h-10 rounded-2xl text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-100 transition-colors"
                                             title="อนุมัติงาน">
@@ -323,7 +324,23 @@ use App\Enums\UserRole;
                                                 <polyline points="22 4 12 14.01 9 11.01" />
                                             </svg>
                                         </button>
+                                    </template> -->
+                                    <template x-if="canApprove && !approved">
+                                        <button
+                                            :disabled="hasWarning"
+                                            @click="if (hasWarning) return; approveSurvey('{{ $item->ID }}', () => approved = true, $el)"
+                                            class="inline-flex items-center justify-center w-10 h-10 rounded-2xl border transition-colors"
+                                            :class="hasWarning
+                                                ? 'text-slate-400 bg-slate-100 border-slate-200 cursor-not-allowed opacity-60'
+                                                : 'text-emerald-600 hover:bg-emerald-50 border-transparent hover:border-emerald-100'"
+                                            :title="hasWarning ? 'มีแจ้งเตือน/ข้อมูลผิดปกติ ยังไม่สามารถอนุมัติได้' : 'อนุมัติงาน'">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                                <polyline points="22 4 12 14.01 9 11.01" />
+                                            </svg>
+                                        </button>
                                     </template>
+
                                     @endif
                                 </div>
                             </td>

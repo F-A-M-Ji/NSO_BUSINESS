@@ -11,23 +11,33 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::post('/login', [AuthController::class, 'login'])->name('login');
-Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1')
+    ->name('login');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
     Route::post('/users/store', [UserController::class, 'store'])->name('users.store');
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware('throttle:60,1')
+        ->name('dashboard');
 
-    Route::get('/subject/reports', [SubjectController::class, 'index'])->name('subject.reports');
+    Route::get('/subject/reports', [SubjectController::class, 'index'])
+        ->middleware('throttle:60,1')
+        ->name('subject.reports');
 
-    Route::post('/subject/report-wrong', [SubjectController::class, 'reportWrong'])->name('subject.reportWrong');
+    Route::post('/subject/report-wrong', [SubjectController::class, 'reportWrong'])
+        ->middleware('throttle:20,1')
+        ->name('subject.reportWrong');
 });
 
 Route::controller(SurveyController::class)->group(function () {
     Route::get('/survey/search', 'search')->name('survey.search');
-    Route::post('/survey/check', 'check')->name('survey.check'); // ลิงก์ Check
+    Route::post('/survey/check', 'check')
+        ->middleware('throttle:20,1')
+        ->name('survey.check'); // ลิงก์ Check
 
     Route::get('/survey/form/{id}', 'form')->name('survey.form'); // หน้าถัดไป
     Route::post('/survey/form/save', 'storePart0')->name('survey.storePart0'); 
@@ -55,5 +65,7 @@ Route::controller(SurveyController::class)->group(function () {
 
     Route::get('/survey/thank-you', 'thankYou')->name('survey.thankYou');
 
-    Route::post('/survey/approve/{id}', 'approve')->name('survey.approve');
+    Route::post('/survey/approve/{id}', 'approve')
+        ->middleware('auth')
+        ->name('survey.approve');
 });

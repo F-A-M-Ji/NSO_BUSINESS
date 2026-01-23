@@ -27,6 +27,7 @@
         <form id="confirm-form"
             action="{{ route('survey.storePart7') }}"
             method="POST"
+            x-data
             @submit-confirm-form.window="$el.submit()">
             @csrf
             <input type="hidden" name="id" value="{{ $control->ID }}">

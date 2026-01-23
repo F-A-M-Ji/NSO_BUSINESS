@@ -105,6 +105,14 @@ return [
         ),
     ],
 
+    'my_secret_key' => env('MY_SECRET_KEY'),
+    'my_secret_previous_keys' => [
+        ...array_filter(
+            explode(',', (string) env('MY_SECRET_PREVIOUS_KEYS', ''))
+        ),
+    ],
+    'my_secret_cipher' => env('MY_SECRET_CIPHER', 'AES-256-GCM'),
+
     /*
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver

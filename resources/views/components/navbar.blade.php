@@ -104,7 +104,7 @@ $user = auth()->user();
                             class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left">
                             ออกจากระบบ
                         </a>
-                        <form id="logout-form" action="{{ route('logout') }}" method="GET" class="hidden">
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                             @csrf
                         </form>
                     </div>

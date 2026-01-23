@@ -10,14 +10,17 @@ use App\Models\ReportStatus;
 
 class SubjectController extends Controller
 {
-    public function index(Request $request)
+    private function ensureSubject(): void
     {
         $user = Auth::user();
-
-        // 1. ตรวจสอบสิทธิ์: เฉพาะ SUBJECT เท่านั้น
-        if ($user->role !== UserRole::SUBJECT) {
+        if (!$user || $user->role !== UserRole::SUBJECT) {
             abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
+    }
+
+    public function index(Request $request)
+    {
+        $this->ensureSubject();
 
         // 2. รายชื่อคอลัมน์ที่จะแสดง (ตามที่คุณระบุ)
         $columns = [
@@ -269,10 +272,12 @@ class SubjectController extends Controller
 
     public function reportWrong(Request $request)
     {
+        $this->ensureSubject();
+
         // Validate ข้อมูล
         $request->validate([
-            'id' => 'required',
-            'message' => 'required|max:255',
+            'id' => ['required', 'digits:15', 'exists:reports,ID'],
+            'message' => ['required', 'string', 'max:255'],
         ]);
 
         $id = $request->input('id');
